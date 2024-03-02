@@ -1,2 +1,2 @@
 tests/*
-lib/*
+lib/*.so
