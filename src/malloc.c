@@ -53,6 +53,7 @@ struct _block
    char   padding[3];    /* Padding: IENTRTMzMjAgU3jMDEED                   */
 };
 
+struct _block *last_checked = NULL;
 
 struct _block *heapList = NULL; /* Free list to track the _blocks available */
 
@@ -92,16 +93,55 @@ struct _block *findFreeBlock(struct _block **last, size_t size)
 // \TODO Put your Best Fit code in this #ifdef block
 #if defined BEST && BEST == 0
    /** \TODO Implement best fit here */
+   struct _block *best_fit = NULL;
+   size_t best_size = SIZE_MAX;
+   while (curr) {
+      if (curr->free && curr->size >= size) {
+         size_t diff = curr->size - size;
+         if (diff < best_size) {
+            best_fit = curr;
+            best_size = diff;
+            if (diff == 0) {
+               break;
+            }
+         }
+      }
+      *last = curr;
+      curr = curr->next;
+   }
+   curr=best_fit;
 #endif
 
 // \TODO Put your Worst Fit code in this #ifdef block
 #if defined WORST && WORST == 0
    /** \TODO Implement worst fit here */
+   struct _block *worst_fit = NULL;
+   size_t worst_size = 0;
+   while (curr) {
+      if (curr->free && curr->size >= size) {
+         size_t diff = curr->size - size;
+         if (diff > worst_size) {
+            worst_fit = curr;
+            worst_size = diff;
+         }
+      }
+      *last = curr;
+      curr = curr->next;
+   }
+   curr = worst_fit;
 #endif
 
 // \TODO Put your Next Fit code in this #ifdef block
 #if defined NEXT && NEXT == 0
    /** \TODO Implement next fit here */
+   if (last_checked) curr = last_checked;
+
+   while (curr && !(curr->free && curr->size >= size)) 
+   {
+      *last = curr;
+      curr = curr->next;
+   }
+   last_checked = curr;
 #endif
 
    return curr;
