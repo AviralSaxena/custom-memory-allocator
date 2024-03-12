@@ -298,6 +298,27 @@ void free(void *ptr)
    /* TODO: Coalesce free _blocks.  If the next block or previous block 
             are free then combine them with this block being freed.
    */
+   struct _block *next = curr->next;
+   if (next && next->free) {
+      curr->size += sizeof(struct _block) + next->size;
+      curr->next = next->next;
+      num_coalesces++;
+   }
+
+   struct _block *temp = heapList;
+   struct _block *prev = NULL;
+
+   while (temp != curr) {
+      prev = temp;
+      temp = temp->next;
+   }
+
+   if (prev && prev->free) {
+      prev->size += sizeof(struct _block) + curr->size;
+      prev->next = curr->next;
+      num_coalesces++;
+      curr = prev;
+   }
 }
 
 void *calloc( size_t nmemb, size_t size )
