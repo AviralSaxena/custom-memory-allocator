@@ -210,6 +210,8 @@ struct _block *growHeap(struct _block *last, size_t size)
 void *malloc(size_t size) 
 {
 
+   num_mallocs++;
+
    if( atexit_registered == 0 )
    {
       atexit_registered = 1;
@@ -236,6 +238,19 @@ void *malloc(size_t size)
             If the leftover space in the new block is less than the sizeof(_block)+4 then
             don't split the block.
    */
+
+   if (next && next->size > size) {
+      size_t remaining = next->size - size;
+      if (remaining >= sizeof(struct _block) + 4) {
+         num_splits++;
+         next->size = size;
+         struct _block *new = (struct _block *)((char *)next + sizeof(struct _block) + next->size);
+         new->size = remaining;
+         new->next = next->next;
+         new->free = true;
+         next->next = new;
+      }
+   }
 
    /* Could not find free _block, so grow heap */
    if (next == NULL) 
@@ -268,6 +283,8 @@ void *malloc(size_t size)
  */
 void free(void *ptr) 
 {
+   num_frees++;
+
    if (ptr == NULL) 
    {
       return;
