@@ -71,6 +71,8 @@ struct _block *heapList = NULL; /* Free list to track the _blocks available */
  */
 struct _block *findFreeBlock(struct _block **last, size_t size) 
 {
+   num_requested++;
+
    struct _block *curr = heapList;
 
 #if defined FIT && FIT == 0
@@ -161,6 +163,8 @@ struct _block *findFreeBlock(struct _block **last, size_t size)
  */
 struct _block *growHeap(struct _block *last, size_t size) 
 {
+   num_grows++;
+
    /* Request more space from OS */
    struct _block *curr = (struct _block *)sbrk(0);
    struct _block *prev = (struct _block *)sbrk(sizeof(struct _block) + size);
@@ -192,6 +196,13 @@ struct _block *growHeap(struct _block *last, size_t size)
    curr->size = size;
    curr->next = NULL;
    curr->free = false;
+   
+   num_blocks++;
+
+   if (max_heap < (int)((char*)sbrk(0) - (char*)heapList)) 
+   {
+      max_heap = (int)((char*)sbrk(0) - (char*)heapList);
+   }
    return curr;
 }
 
@@ -249,6 +260,7 @@ void *malloc(size_t size)
          new->next = next->next;
          new->free = true;
          next->next = new;
+         num_blocks++;
       }
    }
 
@@ -256,6 +268,10 @@ void *malloc(size_t size)
    if (next == NULL) 
    {
       next = growHeap(last, size);
+   }
+   else
+   {
+      num_reuses++;
    }
 
    /* Could not find free _block or grow heap, so just return NULL */
@@ -303,6 +319,7 @@ void free(void *ptr)
       curr->size += sizeof(struct _block) + next->size;
       curr->next = next->next;
       num_coalesces++;
+      num_blocks--;
    }
 
    struct _block *temp = heapList;
@@ -317,6 +334,7 @@ void free(void *ptr)
       prev->size += sizeof(struct _block) + curr->size;
       prev->next = curr->next;
       num_coalesces++;
+      num_blocks--;
       curr = prev;
    }
 }
