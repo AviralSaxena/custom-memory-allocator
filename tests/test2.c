@@ -13,9 +13,7 @@ int main()
   int i;
   for ( i = 0; i < 1024; i++ )
   {
-    ptr_array[i] = ( char * ) malloc ( 1024 ); 
-    
-    ptr_array[i] = ptr_array[i];
+    ptr_array[i] = ( char * ) malloc ( 1024 );
   }
 
   free( ptr );
